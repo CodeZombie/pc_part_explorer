@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <map>
 #include "ConWin.cpp"
 
 enum partType {MOTHERBOARD, GRAPHICS_CARD, RAM, HARD_DRIVE, POWER_SUPPLY};
@@ -13,13 +14,13 @@ const char *part_type[] = {"Graphics Card", "Motherboard", "Ram", "Hard Drive", 
 //  The part object.
 class Part{
   private:
-    char * name;
-    partType type;
+    std::string name;
+    int type;
     int price;
     int stock;
 
   public:
-    Part(char * name, partType type, int price, int stock) {
+    Part(std::string name, int type, int price, int stock) {
       this->name = name;
       this->type = type;
       this->price = price;
@@ -42,7 +43,7 @@ class Part{
       return stock;
     }
 
-    char * getName() {
+    std::string getName() {
       return name;
     }
 };
@@ -120,18 +121,22 @@ void addPartWindow() {
 
 //The series of methods for 
 void findPartWindow() {
+    int p_type_id = 0;
+
+    p_type_id = ConWin::getOptionWindow("FIND A PART", "What type of parts?", part_type, 1);
+    if(p_type_id == -69) {
+        return;
+    }
 }
 
 int main()
 {
+    std::map<std::string, Part*> coolPartList;
+
+    coolPartList["FUCK YU"] = new Part("GTX 560", 0, 400, 5);
+
+
   bool running = true;
-  /*
-  Part *w = new Part("ASROCK Mobo", MOTHERBOARD, 69, 5);
-  Part *x = new Part("Nvidia GTX 550 Ti", GRAPHICS_CARD, 12, 122);
-  Part *y = new Part("Cooler Master Whatever", RAM, 420, 0);
-  Part *z = new Part("900w IED Bomb", POWER_SUPPLY, 200, 99);
-  char *a[] = {w->getName(), x->getName(), y->getName(), z->getName(), NULL};
-  */
   const char *initial_options[] = {"Add a part", "Find parts", "Exit", NULL};
 
   while(running) {
