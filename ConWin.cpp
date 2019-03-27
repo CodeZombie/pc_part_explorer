@@ -123,7 +123,7 @@ namespace ConWin {
 
     //Draws a window that asks a user for a string.
     char* getStringWindow(const char *title, const char *instruction, int type) {
-        flushBuffer();
+        //flushBuffer();
         bool waitingForValidInput = true;
         char *input = (char*)malloc(sizeof(char)*99);
         bool firstTry = true;
