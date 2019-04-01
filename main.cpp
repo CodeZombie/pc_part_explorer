@@ -89,6 +89,46 @@ Part* addPartWindow() {
   return new_part;
 }
 
+void listPartWindow() {
+  bool finished = false;
+  std::map<std::string, Part*> localMap = PartDatabase::getPartMap();
+  int page = 0;
+
+  while(!finished) {
+    std::vector<std::string> options;
+    
+    std::map<std::string,Part*>::iterator localMapIterator = localMap.begin();
+    //localMapIterator++; //set page. (++ page*10)
+
+    bool foundEnd = false;
+      
+    for(int i = 0; i < 10; i++) {
+      if(foundEnd || localMapIterator == localMap.end()) {
+        options.insert(options.end(), "");
+        foundEnd =true;
+      }else{
+        options.insert(options.end(), localMapIterator->second->getName());
+      }
+      localMapIterator++;
+    }
+    options.insert(options.end(), "Filter Results");
+    options.insert(options.end(), "Next Page");
+    options.insert(options.end(), "Previous page");
+      
+    int result = ConWin::getOptionWindow("Select a part", "Select an option (pg 1 of 1)", options, 1);
+
+    if(result == 11) {
+      //show the filter window to further filter the results.
+    }else if(result == 12) {
+      //start showing the previous ten items
+    }else if(result == 13) {
+    // start showing the next ten items
+    }else if(result == -69) {
+      finished = true;
+    }
+  }
+}
+
 //The series of methods for 
 int findPartWindow() {
     int p_type_id = 0;
@@ -103,7 +143,6 @@ int main()
   std::vector<std::string> initial_options = {"Add a part", "Find parts", "Exit"};
 
   PartDatabase::loadPartData();
-  std::cin.ignore();
 
   while(running) {
     switch(ConWin::getOptionWindow("PC PART EXPLORER", "Please select an option", initial_options, 0)) {
@@ -115,76 +154,7 @@ int main()
       }
       case 2: 
       {
-        bool finished = false;
-        std::map<std::string, Part*> localMap = PartDatabase::getPartMap();
-        int page = 0;
-
-        while(!finished) {
-          
-          //create the options array to be displayed to the user.
-          std::vector<std::string> options;
-          
-          std::map<std::string,Part*>::iterator localMapIterator = localMap.begin();
-          //localMapIterator++; //set page. (++ page*10)
-
-          bool foundEnd = false;
-            
-          for(int i = 0; i < 10; i++) {
-            if(foundEnd || localMapIterator == localMap.end()) {
-              options.insert(options.end(), "");
-              foundEnd =true;
-            }else{
-              //char * x = (char *)localMapIterator->second->getName().c_str();
-              options.insert(options.end(), localMapIterator->second->getName());
-              //memcpy (options[i], localMapIterator->second->getName().c_str(), strlen(localMapIterator->second->getName().c_str())+1 );
-              //strcpy((char *)options[i], localMapIterator->second->getName().c_str());
-              //options[i] = localMapIterator->second->getName().c_str();
-              //strcpy(options[i], localMapIterator->second->getName().c_str());
-            }
-            localMapIterator++;
-          }
-          options.insert(options.end(), "Filter Results");
-          options.insert(options.end(), "Next Page");
-          options.insert(options.end(), "Previous page");
-          /*
-          ConWin::clear();
-          std::map<std::string,Part*>::iterator gayIterator = localMap.begin();
-          printf("FUCK: %s\n", gayIterator->second->getName().c_str());
-          gayIterator++;
-          printf("FUCK: %s\n", gayIterator->second->getName().c_str());
-                    std::cin.ignore();
-          */
-
-            
-          int result = ConWin::getOptionWindow("Select a part", "Select an option (pg 1 of 1)", options, 1);
-
-          if(result == 11) {
-            //show the filter window to further filter the results.
-          }else if(result == 12) {
-            //start showing the previous ten items
-          }else if(result == 13) {
-          // start showing the next ten items
-          }else if(result == -69) {
-            finished = true;
-          }
-        }
-          /*
-          ConWin::clear();
-          printf("##  %s ##\n", PartDatabase::getPartMap().find("fuck")->second->getName().c_str());
-          std::cin.ignore();
-          */
-          /*
-          This SHOULD (as in I think it does) iterate through each element in the map of the
-          specified part type. still need to add the code to convert each part's data into a
-          string/char[] and add it to the array to be passed into drawDialogWindow.
-          */
-          /*
-          for (std::map<std::string, Part*>::iterator it = coolPartList[type_id].begin();
-                 it != coolPartList[type_id].end(); it++){
-                   //format part data into readable string and add to array
-                 }
-          ConWin::drawDialogWindow("FIND A PART", part_type[type_id], NULL);
-          */
+          listPartWindow();
           break;
       }
       case 3: 

@@ -26,16 +26,12 @@ namespace PartDatabase {
     while(std::getline(dbFile, line)) {
       if(iterator % 4 == 0) {
         part_name = line;
-        printf("NAME: %s", part_name.c_str());
       }else if(iterator % 4 == 1) {
         part_type = line;
-        printf("TYPE: %s", part_type.c_str());
       }else if(iterator % 4 == 2) {
         part_price = line;
-        printf("PRICE: %s", part_price.c_str());
       }else if(iterator % 4 == 3) {
         part_stock = line;
-        printf("STOCK: %s", part_stock.c_str());
         addPart(new Part(part_name, std::stoi(part_type), std::stoi(part_price), std::stoi(part_stock)));
       }
       iterator++;
@@ -69,7 +65,9 @@ namespace PartDatabase {
     return partMap;
   }
 
-  std::map<std::string, Part*> getFilteredMapByPrice(int lower, int upper, bool asc) {}
+  std::map<std::string, Part*> orderMapByPrice(int lower, int upper, bool asc) {
+
+  }
 
   std::map<std::string, Part*> getFilteredMapByType(int type) {}
 
