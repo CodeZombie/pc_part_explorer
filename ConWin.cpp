@@ -22,19 +22,20 @@ namespace ConWin {
     //          1 to display a "cancel to go back" message.
     //          2 to display a "Press enter to continue". This will take in no input.
     //  showNumbers: Whether or not to number the options.
-    void drawWindow(const char *title, const char *instructions, const char **options, int type, bool showNumbers) {
+    
+    void drawWindow(std::string title, std::string instructions, std::vector<std::string> options, int type, bool showNumbers) {
         clear();
         printf("######################################################\n");
-        printf("##  %-47s ##\n", title);
+        printf("##  %-47s ##\n", title.c_str());
         printf("######################################################\n");
         printf("#                                                    #\n");
-        printf("#   %-48s #\n", instructions);
-        if(options != NULL) {
-            for(int i = 0; options[i] != NULL; i++) {
+        printf("#   %-48s #\n", instructions.c_str());
+        if(options.size() != 0) {
+            for(int i = 0; i < static_cast<int>(options.size()); i++) {
                 if(showNumbers == true) {
-                    printf("#   %i: %-45s #\n", i+1, options[i]);
+                    printf("#   %i: %-45s #\n", i+1, options[i].c_str());
                 }else {
-                    printf("#   %-48s #\n", options[i]);
+                    printf("#   %-48s #\n", options[i].c_str());
                 }
             }
         }
@@ -50,20 +51,20 @@ namespace ConWin {
     }
 
     //Draws a window that takes no input. 
-    void drawDialogWindow(const char *title, const char *instructions, const char **options) {
+    void drawDialogWindow(std::string title, std::string instructions, std::vector<std::string> options) {
         drawWindow(title, instructions, options, 2, false);
         std::cin.ignore();
     }
-
+    
     //Draws a window that will ask the user for a numbered input based on an array of options.
-    int getOptionWindow(const char *title, const char *instructions, const char **options, bool type) {
+    int getOptionWindow(std::string title, std::string instructions, std::vector<std::string> options, bool type) {
         bool waitingForValidInput = true;
         char *input = (char*)malloc(sizeof(char)*99);
         int input_int;
         bool firstTry = true;
 
         int option_range;
-        for(option_range = 0; options[option_range] != NULL; option_range++);
+        for(option_range = 0; option_range < options.size(); option_range++);
 
         while(waitingForValidInput) {
             drawWindow(title, instructions, options, type, true);
@@ -91,14 +92,14 @@ namespace ConWin {
     }
 
     //draws a window that will ask the user for a positive number of any range.
-    int getIntegerWindow(const char *title, const char *instructions, int type) {
+    int getIntegerWindow(std::string title, std::string instructions, int type) {
         bool waitingForValidInput = true;
         char *input = (char*)malloc(sizeof(char)*99);
         int input_int;
         bool firstTry = true;
 
         while(waitingForValidInput) {
-            drawWindow(title, instructions, NULL, type, true);
+            drawWindow(title, instructions, std::vector<std::string>{}, type, true);
 
             if(firstTry == false) {
                 printf("Invalid input. Try again.\n");
@@ -122,14 +123,14 @@ namespace ConWin {
     }
 
     //Draws a window that asks a user for a string.
-    char* getStringWindow(const char *title, const char *instruction, int type) {
+    char* getStringWindow(std::string title, std::string instruction, int type) {
         //flushBuffer();
         bool waitingForValidInput = true;
         char *input = (char*)malloc(sizeof(char)*99);
         bool firstTry = true;
         while(waitingForValidInput) {
 
-            drawWindow(title, instruction, NULL, type, true);
+            drawWindow(title, instruction, std::vector<std::string>{}, type, true);
 
             if(firstTry == false) {
                 printf("Invalid input: %s. Try again.\n", input);
