@@ -12,6 +12,14 @@ namespace PartDatabase {
     }
   } 
 
+  std::vector<Part *> getPartsAsVector() {
+    std::vector<Part *> output;
+    for( std::map<std::string, Part*>::iterator it = partMap.begin(); it != partMap.end(); ++it ) {
+      output.push_back(it->second);
+    }
+    return output;
+  }
+
   void loadPartData() {
     std::ifstream dbFile;
     dbFile.open(filename);
@@ -65,12 +73,37 @@ namespace PartDatabase {
     return partMap;
   }
 
-  std::map<std::string, Part*> orderMapByPrice(int lower, int upper, bool asc) {
-
+  //sorts input by price
+  std::vector<Part*> orderByPrice(std::vector<Part*> input, bool asc) {
+    auto sortMethod = [](Part* A, Part* B) { return (A->getPrice() < B->getPrice()); };
+    if(asc) {
+      auto sortMethod = [](Part* A, Part* B) { return (A->getPrice() > B->getPrice()); };
+    }
+    std::sort(input.begin(), input.end(), sortMethod); 
+    return input;
   }
 
-  std::map<std::string, Part*> getFilteredMapByType(int type) {}
+  //sorts the input by stock
+  std::vector<Part*> orderByStock(std::vector<Part*> input, bool asc) {
+    auto sortMethod = [](Part* A, Part* B) { return (A->getStock() < B->getStock()); };
+    if(asc) {
+      auto sortMethod = [](Part* A, Part* B) { return (A->getStock() > B->getStock()); };
+    }
+    std::sort(input.begin(), input.end(), sortMethod); 
+    return input;
+  }
 
-  std::map<std::string, Part*> getFilteredMapByStock(int lower, int upper, bool asc) {}
+  //removes all items that are not of a certain type
+  std::vector<Part*> filterByType(std::vector<Part*> input, int type) {
+    for(std::vector<Part*>::iterator iter = input.begin(); iter != input.end();) {
+      if((*iter)->getType() != type) {
+        input.erase(iter);
+      }else{
+        ++iter;
+      }
+    }
+    return input;
+  }
+
   
 }

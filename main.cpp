@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fstream>
+#include <algorithm>
 #include <vector>
 #include <string.h>
 #include <map>
@@ -90,26 +91,36 @@ Part* addPartWindow() {
 }
 
 void listPartWindow() {
+  /*
+    Grabs the partMap and stores it as a Vector. This will allow us to properly sort the data,
+    as maps are unsuitable for sorting.
+
+  */
   bool finished = false;
   std::map<std::string, Part*> localMap = PartDatabase::getPartMap();
+
+  //create a vector from the map:
+  std::vector<Part *> partVector = PartDatabase::getPartsAsVector();
+
   int page = 0;
 
   while(!finished) {
     std::vector<std::string> options;
     
-    std::map<std::string,Part*>::iterator localMapIterator = localMap.begin();
-    //localMapIterator++; //set page. (++ page*10)
+    std::vector<Part *>::iterator partVectorIterator = partVector.begin();
+    //localMapIterator++; //set page. (++ page*10) //maybe use vector::advance?
+    
 
     bool foundEnd = false;
       
     for(int i = 0; i < 10; i++) {
-      if(foundEnd || localMapIterator == localMap.end()) {
+      if(foundEnd || partVectorIterator == partVector.end()) {
         options.insert(options.end(), "");
         foundEnd =true;
       }else{
-        options.insert(options.end(), localMapIterator->second->getName());
+        options.insert(options.end(), (*partVectorIterator)->getName() + " #" + std::to_string((*partVectorIterator)->getType()) + " $" + std::to_string((*partVectorIterator)->getPrice()) + " x" + std::to_string((*partVectorIterator)->getStock()) )  ;
       }
-      localMapIterator++;
+      partVectorIterator++;
     }
     options.insert(options.end(), "Filter Results");
     options.insert(options.end(), "Next Page");
@@ -119,6 +130,21 @@ void listPartWindow() {
 
     if(result == 11) {
       //show the filter window to further filter the results.
+      int result = ConWin::getOptionWindow("SORT AND FILTER", "Select a sorting/filtering method", {"Sort Price (asc)", "Sort Price (desc)", "Sort Stock (asc)", "Sort Stock (desc)", "Filter product type", "Reset all filters"}, 1);
+      if(result == 1) {
+        partVector = PartDatabase::orderByPrice(partVector, true);
+      }else if(result == 2){
+        partVector = PartDatabase::orderByPrice(partVector, false);
+      }else if(result == 3) {
+        partVector = PartDatabase::orderByStock(partVector, true);
+      }else if(result == 4) {
+        partVector = PartDatabase::orderByPrice(partVector, false);
+      }else if(result == 5) {
+        int filter_type = ConWin::getOptionWindow("FILTER BY TYPE", "Select the type to filter by", part_type, 1);
+        if(filter_type != -69) {
+          partVector = PartDatabase::filterByType(partVector, filter_type);
+        }
+      }
     }else if(result == 12) {
       //start showing the previous ten items
     }else if(result == 13) {
