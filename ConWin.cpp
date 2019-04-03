@@ -26,38 +26,38 @@ namespace ConWin {
     //  showNumbers: Whether or not to number the options.
     void drawHeader(std::string title, std::string instructions) {
         clear();
-        printf("######################################################\n");
-        printf("##  %-47s ##\n", title.c_str());
-        printf("######################################################\n");
-        printf("#                                                    #\n");
-        printf("#   %-48s #\n", instructions.c_str());
-        printf("#                                                    #\n");
+        printf("################################################################\n");
+        printf("##  %-57s ##\n", title.c_str());
+        printf("################################################################\n");
+        printf("#                                                              #\n");
+        printf("#   %-58s #\n", instructions.c_str());
+        printf("#                                                              #\n");
     }
 
     void drawOptions(std::vector<std::string> options, bool showNumbers) {
         if(options.size() != 0) {
             for(int i = 0; i < static_cast<int>(options.size()); i++) {
                 if(showNumbers == true) {
-                    printf("#   %i: %-45s #\n", i+1, options[i].c_str());
+                    printf("#   %-2i: %-54s #\n", i+1, options[i].c_str());
                 }else {
-                    printf("#   %-48s #\n", options[i].c_str());
+                    printf("#   %-58s #\n", options[i].c_str());
                 }
             }
         }
-        printf("#                                                    #\n");
+        printf("#                                                              #\n");
     }
 
     void drawWindowControls(int type) {
         if(type == 1) {
-            printf("#   Type \"cancel\" to return to the main menu         #\n");
+            printf("#   Type \"cancel\" to return to the main menu                   #\n");
         }else if(type == 2) {
-            printf("#   Press ENTER to continue                          #\n");
+            printf("#   Press ENTER to continue                                              #\n");
         }
-        printf("#                                                    #\n");
+        printf("#                                                              #\n");
     }
 
     void drawFooter() {
-        printf("######################################################\n");
+        printf("################################################################\n");
         printf("\n");
     }
 
@@ -160,7 +160,6 @@ namespace ConWin {
 
     //Draws a window that asks a user for a string.
     char* getStringWindow(std::string title, std::string instructions, int type) {
-        //flushBuffer();
         bool waitingForValidInput = true;
         char *input = (char*)malloc(sizeof(char)*99);
         bool firstTry = true;

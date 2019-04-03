@@ -1,4 +1,12 @@
+/* 
+  ADD THE ABILITY TO ADD NEW PART TYPES
+  modify existing part (name, stock etc)
+
+
+*/
+
 #include <iostream>
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <fstream>
@@ -87,6 +95,7 @@ void listPartWindow(PartDatabase * partTree) {
 
     std::vector<std::string> options;
     std::vector<Part *>::iterator localPartVectorIterator = localPartVector.begin();
+    std::advance(localPartVectorIterator, page*10);
     //localMapIterator++; //set page. (++ page*10) //maybe use vector::advance
 
     bool foundEnd = false;
@@ -103,7 +112,8 @@ void listPartWindow(PartDatabase * partTree) {
     options.insert(options.end(), "Next Page");
     options.insert(options.end(), "Previous page");
       
-    int result = ConWin::getOptionWindow("Select a part", "Select an option (pg 1 of 1)", options, 1);
+    std::string pageInstr= "Select an option (pg " + std::to_string(page+1) + " of " + std::to_string((int)(localPartVector.size() / 10)+1) + ")";
+    int result = ConWin::getOptionWindow("Select a part", pageInstr, options, 1);
     if(result >= 1 && result <= 10) {
 
       partOptionPrompt(localPartVector[result-1]);
@@ -124,9 +134,16 @@ void listPartWindow(PartDatabase * partTree) {
         }
       }
     }else if(result == 12) {
-      //start showing the previous ten items
+      //start showing the next ten items
+
+      if(page < ceil(localPartVector.size() / 10)) {
+        page++;
+      }
     }else if(result == 13) {
-    // start showing the next ten items
+      if(page > 0) {
+        page--;
+      }
+    // start showing the previous ten items
     }else if(result == -69) {
       finished = true;
     }
@@ -142,7 +159,7 @@ int findPartWindow() {
 
 int main() {
   bool running = true;
-  std::vector<std::string> initial_options = {"Add a part", "Find parts", "Exit"};
+  std::vector<std::string> initial_options = {"Add a part", "Find parts", "Add new part type", "Exit"};
 
   PartDatabase * partTree = new PartDatabase();
   partTree->loadFromFile("database.db");
@@ -161,7 +178,12 @@ int main() {
           listPartWindow(partTree);
           break;
       }
-      case 3: 
+      case 3:
+      {
+        
+        break;
+      }
+      case 4: 
       {
         running = false;
         break;
