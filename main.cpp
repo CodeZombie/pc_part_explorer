@@ -1,20 +1,3 @@
-/* Changelog
-
-    1.added stock input when adding new part in addPartWindow()
-    2.modified coolPartList to be an array of maps<string, part*> of size 5 in main()
-    3.added code to main() in Case 1 to add new parts to coolPartList in the appropriate map
-      and modified addPartWindow to return a pointer to a new part (or NULL on failing a check)
-    4.created the for loop to iterate through a chosen part type's map in main() Case 2, and modified
-      findPartWindow to return the entered part type number (as an int)
-    5.changed p_type in addPartWindow to be an int instead of a partType since it seems easier and I think
-      you said earlier that you didn't want/need the enum afterall. Change it back if you still want it,
-      it doesn't interfere with any of the other code I added. Only reason I changed it is because
-      it kept raising the always returns false warning when compiling 'if (p_type == -69)'
-
-    if you have any critiques, if there's anything I forgot, or if I did
-    everything wrong, just let me know. I won't take it personally :)
-*/
-
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
@@ -22,14 +5,14 @@
 #include <algorithm>
 #include <vector>
 #include <string.h>
-#include <map>
-#include "ConWin.cpp"
+#include <set>
+
+std::vector<std::string> availablePartTypes({"Graphics Card", "Motherboard", "RAM", "Hard Drive", "Power Supply"});
 #include "Part.cpp"
+#include "ConWin.cpp"
 #include "PartDatabase.cpp"
 
-//The part types available.
-std::vector<std::string> part_type = {"Graphics Card", "Motherboard", "RAM", "Hard Drive", "Power Supply"};
-
+//The part types available
 
 Part* addPartWindow() {
   char *p_name = (char*)malloc(sizeof(char) * 99);
@@ -50,7 +33,7 @@ Part* addPartWindow() {
   }
 
   //Creates a window that displays all the part types and asks the user to select one.
-  p_type = ConWin::getOptionWindow("ADD NEW PART", "Enter Part Type", part_type, 1);
+  p_type = ConWin::getOptionWindow("ADD NEW PART", "Enter Part Type", availablePartTypes, 1);
   if(p_type == -69) {
     return NULL;
   }
@@ -62,87 +45,82 @@ Part* addPartWindow() {
   }
 
   Part* new_part = new Part(p_name, (int)p_type, p_cost, p_stock);
-
-
-  //sets up the lines of text that will be drawn in the upcoming drawDialogWindow...
-  char *lineOne = (char*)malloc(sizeof(char) * 99);
-  char *lineTwo = (char*)malloc(sizeof(char) * 99);
-  char *lineThree = (char*)malloc(sizeof(char) * 99);
-  char *lineFour = (char*)malloc(sizeof(char) * 99);
-  sprintf(lineOne, "Part Name: %s", p_name);
-  sprintf(lineTwo, "Part Cost: %d", p_cost);
-  sprintf(lineThree, "Part Type: %d", (int)p_type);
-  sprintf(lineFour, "Part Stock: %d", p_stock);
-  //char *lines[] = {lineOne, lineTwo, lineThree, lineFour, NULL};
-
-  std::vector<std::string> lines = {lineOne, lineTwo, lineThree, lineFour};
-
-  //draws the lines[] in a window.
-  ConWin::drawDialogWindow("NEW PART ADDED!", "New part has been created:", lines);
-
-  //free all that memory allocated.
-  free(p_name);
-  free(lineOne);
-  free(lineTwo);
-  free(lineThree);
-  free(lineFour);
-
+  ConWin::drawPartWindow(new_part, "PART SUCCESFULLY CREATED", "Please confirm the part information...");
   return new_part;
 }
 
-void listPartWindow() {
-  /*
-    Grabs the partMap and stores it as a Vector. This will allow us to properly sort the data,
-    as maps are unsuitable for sorting.
+void partOptionPrompt(Part *part) {
+  ConWin::drawPartWindow(part, "PART INFO", "Select an option in the next page");
+  int result = ConWin::getOptionWindow("SELECT PART OPTION", "Choose what to do with this part", {"Change name", "Change price", "Change stock", "Change product type", "Delete"}, 1);
+  if(result == 1) {
+    //rename
+  }else if(result == 2) {
+    //change price
+  }else if(result == 3) {
+    //change stock
+  }else if(result == 4) {
+    //change type
+  }else if(result == 5) {
+    //delete ):
+  }
+}
 
-  */
+void listPartWindow(PartDatabase * partTree) {
+  std::vector<Part *> localPartVector = partTree->getByPriceAscending();
   bool finished = false;
-  std::map<std::string, Part*> localMap = PartDatabase::getPartMap();
-
-  //create a vector from the map:
-  std::vector<Part *> partVector = PartDatabase::getPartsAsVector();
-
   int page = 0;
+  int filter = 0;
+  int sortBy = 1; //1 == price ASC, 2 == price DESC, 3 == stock ASC, 4 == stock DESC.
 
   while(!finished) {
+
+    /* SORT VECTOR */
+    if(sortBy == 1) {
+      localPartVector = partTree->getByPriceAscending(filter);
+    }else if(sortBy == 2){
+      localPartVector = partTree->getByPriceDescending(filter);
+    }else if(sortBy == 3) {
+      localPartVector = partTree->getByStockAscending(filter);
+    }else if(sortBy == 4) {
+      localPartVector = partTree->getByStockDescending(filter);
+    }
+
     std::vector<std::string> options;
-    
-    std::vector<Part *>::iterator partVectorIterator = partVector.begin();
-    //localMapIterator++; //set page. (++ page*10) //maybe use vector::advance?
-    
+    std::vector<Part *>::iterator localPartVectorIterator = localPartVector.begin();
+    //localMapIterator++; //set page. (++ page*10) //maybe use vector::advance
 
     bool foundEnd = false;
-      
     for(int i = 0; i < 10; i++) {
-      if(foundEnd || partVectorIterator == partVector.end()) {
+      if(foundEnd || localPartVectorIterator == localPartVector.end()) {
         options.insert(options.end(), "");
         foundEnd =true;
       }else{
-        options.insert(options.end(), (*partVectorIterator)->getName() + " #" + std::to_string((*partVectorIterator)->getType()) + " $" + std::to_string((*partVectorIterator)->getPrice()) + " x" + std::to_string((*partVectorIterator)->getStock()) )  ;
+        options.insert(options.end(), (*localPartVectorIterator)->getName() + " #" + std::to_string((*localPartVectorIterator)->getType()) + " $" + std::to_string((*localPartVectorIterator)->getPrice()) + " x" + std::to_string((*localPartVectorIterator)->getStock()));
       }
-      partVectorIterator++;
+      localPartVectorIterator++;
     }
     options.insert(options.end(), "Filter Results");
     options.insert(options.end(), "Next Page");
     options.insert(options.end(), "Previous page");
       
     int result = ConWin::getOptionWindow("Select a part", "Select an option (pg 1 of 1)", options, 1);
+    if(result >= 1 && result <= 10) {
 
-    if(result == 11) {
-      //show the filter window to further filter the results.
+      partOptionPrompt(localPartVector[result-1]);
+    }else if(result == 11) {
+      //show the filter window to filter the results.
       int result = ConWin::getOptionWindow("SORT AND FILTER", "Select a sorting/filtering method", {"Sort Price (asc)", "Sort Price (desc)", "Sort Stock (asc)", "Sort Stock (desc)", "Filter product type", "Reset all filters"}, 1);
-      if(result == 1) {
-        partVector = PartDatabase::orderByPrice(partVector, true);
-      }else if(result == 2){
-        partVector = PartDatabase::orderByPrice(partVector, false);
-      }else if(result == 3) {
-        partVector = PartDatabase::orderByStock(partVector, true);
-      }else if(result == 4) {
-        partVector = PartDatabase::orderByPrice(partVector, false);
+      if(result >= 1 && result <= 4) {
+        sortBy = result;
       }else if(result == 5) {
-        int filter_type = ConWin::getOptionWindow("FILTER BY TYPE", "Select the type to filter by", part_type, 1);
-        if(filter_type != -69) {
-          partVector = PartDatabase::filterByType(partVector, filter_type);
+        std::vector<std::string> filterTypes;
+        filterTypes.assign(availablePartTypes.begin(), availablePartTypes.end());
+        filterTypes.push_back("None");
+        int t_fil = ConWin::getOptionWindow("FILTER BY TYPE", "Select the type to filter by", filterTypes, 1);
+        if(t_fil == 6) {
+          filter = 0;
+        }else if(t_fil != -69) {
+          filter = t_fil;
         }
       }
     }else if(result == 12) {
@@ -158,29 +136,29 @@ void listPartWindow() {
 //The series of methods for 
 int findPartWindow() {
     int p_type_id = 0;
-
-    p_type_id = ConWin::getOptionWindow("FIND A PART", "What type of parts?", part_type, 1);
+    p_type_id = ConWin::getOptionWindow("FIND A PART", "What type of parts?", availablePartTypes, 1);
         return p_type_id;
 }
 
-int main()
-{
+int main() {
   bool running = true;
   std::vector<std::string> initial_options = {"Add a part", "Find parts", "Exit"};
 
-  PartDatabase::loadPartData();
+  PartDatabase * partTree = new PartDatabase();
+  partTree->loadFromFile("database.db");
+ // printf("NUMER OF ELEMENTS: %d", partTree->size());
 
   while(running) {
     switch(ConWin::getOptionWindow("PC PART EXPLORER", "Please select an option", initial_options, 0)) {
       case 1: 
       {
-        PartDatabase::addPart(addPartWindow());
-        PartDatabase::savePartData();
+        partTree->insert(addPartWindow());
+        partTree->saveToFile("database.db");
         break;
       }
       case 2: 
       {
-          listPartWindow();
+          listPartWindow(partTree);
           break;
       }
       case 3: 

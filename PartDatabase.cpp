@@ -1,109 +1,121 @@
-
-
-//the methods used for interacting with the list of parts.
-namespace PartDatabase {
-  std::map<std::string, Part*> partMap; //Always holds the updated and current versions of the data.
-  std::string filename = "database.db";
-
-    //should not save internally, as this method is called by loadPartData
-  void addPart(Part * part) {
-    if(part != NULL) {
-      partMap.insert(std::pair<std::string, Part*>(part->getName(), part));
+//compare method used by the elementsByPrice Set (Binary Search Tree)
+struct price_compare {
+    bool operator()(Part * lhs, Part * rhs) const {
+        return lhs->getPrice() < rhs->getPrice();
     }
-  } 
+};
 
-  std::vector<Part *> getPartsAsVector() {
-    std::vector<Part *> output;
-    for( std::map<std::string, Part*>::iterator it = partMap.begin(); it != partMap.end(); ++it ) {
-      output.push_back(it->second);
+//compare method used by the elementsByStock Set (Binary Search Tree)
+struct stock_compare {
+    bool operator()(Part * lhs, Part * rhs) const {
+        return lhs->getStock() < rhs->getStock();
     }
-    return output;
-  }
+};
 
-  void loadPartData() {
-    std::ifstream dbFile;
-    dbFile.open(filename);
-    std::string line;
-    
-    int iterator = 0;
-    std::string part_name;
-    std::string part_type;
-    std::string part_price;
-    std::string part_stock;
+//This class will hold references to every Part object.
+//it stores each pointer in 2 Multisets. One sorted by Price, the other by stock.
+// Insertion into a bst is O(n), making them very fast.
+// Sorting in ascending or descending order is just a matter of reversing the output of the sets, which is an O(n) operation.
 
-    while(std::getline(dbFile, line)) {
-      if(iterator % 4 == 0) {
-        part_name = line;
-      }else if(iterator % 4 == 1) {
-        part_type = line;
-      }else if(iterator % 4 == 2) {
-        part_price = line;
-      }else if(iterator % 4 == 3) {
-        part_stock = line;
-        addPart(new Part(part_name, std::stoi(part_type), std::stoi(part_price), std::stoi(part_stock)));
-      }
-      iterator++;
-    }
-    dbFile.close();
-  }
+class PartDatabase {
+    private:
+        std::multiset<Part *, price_compare> elementsByPrice;
+        std::multiset<Part *, stock_compare> elementsByStock;
 
-  void savePartData() {
-    std::ofstream dbFile;
-    dbFile.open(filename);
-    for (std::map<std::string, Part*>::iterator iter = partMap.begin(); iter != partMap.end(); ++iter){
-      dbFile << iter->second->getName() << "\n";
-      dbFile << std::to_string(iter->second->getType()) << "\n";
-      dbFile << std::to_string(iter->second->getPrice()) << "\n";
-      dbFile << std::to_string(iter->second->getStock()) << "\n";
-    }
-    
-    dbFile.close();
+    public:
+        void loadFromFile(std::string filename) {
+            if(this->size() == 0) {
+                std::ifstream dbFile;
+                dbFile.open(filename);
+                std::string line;
+                
+                int iterator = 0;
+                std::string part_name;
+                std::string part_type;
+                std::string part_price;
+                std::string part_stock;
 
-  } //converts the data from partList into a string and stores it to a file.
+                while(std::getline(dbFile, line)) {
+                if(iterator % 4 == 0) {
+                    part_name = line;
+                }else if(iterator % 4 == 1) {
+                    part_type = line;
+                }else if(iterator % 4 == 2) {
+                    part_price = line;
+                }else if(iterator % 4 == 3) {
+                    part_stock = line;
+                    this->insert(new Part(part_name, std::stoi(part_type), std::stoi(part_price), std::stoi(part_stock)));
+                }
+                iterator++;
+                }
+                dbFile.close();
+            }
+        }
 
+        void saveToFile(std::string filename) {
+            std::ofstream dbFile;
+            dbFile.open(filename);
+            for (std::multiset<Part *, price_compare>::iterator iter = elementsByPrice.begin(); iter != elementsByPrice.end(); ++iter){
+                dbFile << (*iter)->getName() << "\n";
+                dbFile << std::to_string((*iter)->getType()) << "\n";
+                dbFile << std::to_string((*iter)->getPrice()) << "\n";
+                dbFile << std::to_string((*iter)->getStock()) << "\n";
+            }
+            dbFile.close();
 
+        }
+        
+        //get the number of elements in the tree.
+        int size() {
+            return elementsByPrice.size();
+        } 
 
-  void removePart(char * name) {} //calls Save
+        //inserts an element into the tree
+        void insert(Part * part) {
+            if(part != NULL) {
+                elementsByPrice.insert(part);
+                elementsByStock.insert(part);
+            }
+        }
 
-  void updatePartPrice(Part * part, int price) {} //calls Save
+        std::vector<Part *> getByPriceAscending() {
+            std::vector<Part *> output;
+            output.assign(elementsByPrice.begin(), elementsByPrice.end());
+            return output;
+        }
 
-  void updatePartStock(Part * part, int stock) {} //calls Save
+        std::vector<Part *> filterByType(std::vector<Part *> parts, int typeFilter) {
+            std::vector<Part *> output;
+            for(std::vector<Part *>::iterator iter = parts.begin(); iter != parts.end(); ++iter) {
+                if(typeFilter == 0 || (*iter)->getType() == typeFilter) {
+                    output.insert(output.end(), (*iter));
+                }    
+            }
+            return output;
+        }
 
-  std::map<std::string, Part*> getPartMap() {
-    return partMap;
-  }
+        //returns a vector with the sorted set of data.
+        std::vector<Part *> getByPriceAscending(int typeFilter) {
+            std::vector<Part *> output;
+            output.assign(elementsByPrice.begin(), elementsByPrice.end());
+            return filterByType(output, typeFilter);
+        }
 
-  //sorts input by price
-  std::vector<Part*> orderByPrice(std::vector<Part*> input, bool asc) {
-    auto sortMethod = [](Part* A, Part* B) { return (A->getPrice() < B->getPrice()); };
-    if(asc) {
-      auto sortMethod = [](Part* A, Part* B) { return (A->getPrice() > B->getPrice()); };
-    }
-    std::sort(input.begin(), input.end(), sortMethod); 
-    return input;
-  }
+        std::vector<Part *> getByPriceDescending(int typeFilter) {
+            std::vector<Part *> output;
+            output.assign(elementsByPrice.rbegin(), elementsByPrice.rend());
+            return filterByType(output, typeFilter);
+        }
 
-  //sorts the input by stock
-  std::vector<Part*> orderByStock(std::vector<Part*> input, bool asc) {
-    auto sortMethod = [](Part* A, Part* B) { return (A->getStock() < B->getStock()); };
-    if(asc) {
-      auto sortMethod = [](Part* A, Part* B) { return (A->getStock() > B->getStock()); };
-    }
-    std::sort(input.begin(), input.end(), sortMethod); 
-    return input;
-  }
+        std::vector<Part *> getByStockAscending(int typeFilter) {
+            std::vector<Part *> output;
+            output.assign(elementsByStock.begin(), elementsByStock.end()); //now convert the sorted data to a vector and return that (for portability)
+            return filterByType(output, typeFilter);
+        }
 
-  //removes all items that are not of a certain type
-  std::vector<Part*> filterByType(std::vector<Part*> input, int type) {
-    for(std::vector<Part*>::iterator iter = input.begin(); iter != input.end();) {
-      if((*iter)->getType() != type) {
-        input.erase(iter);
-      }else{
-        ++iter;
-      }
-    }
-    return input;
-  }
-
-  
-}
+        std::vector<Part *> getByStockDescending(int typeFilter) {
+            std::vector<Part *> output;
+            output.assign(elementsByStock.rbegin(), elementsByStock.rend());
+            return filterByType(output, typeFilter);
+        }
+};

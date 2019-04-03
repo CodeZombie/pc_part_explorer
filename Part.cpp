@@ -8,6 +8,7 @@ class Part{
     int stock;
 
   public:
+
     Part(std::string name, int type, int price, int stock) {
       this->name = name;
       this->type = type;

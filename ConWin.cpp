@@ -13,7 +13,9 @@ namespace ConWin {
     void clear() {
         std::cout << "\x1B[2J\x1B[H";
     }
-    
+    void wait() {
+        std::cin.ignore();
+    }
     //draws a window to the console.
     //  title: The text displayed at the top of the window
     //  instructions: The text displayed at the top of the window body.
@@ -22,14 +24,17 @@ namespace ConWin {
     //          1 to display a "cancel to go back" message.
     //          2 to display a "Press enter to continue". This will take in no input.
     //  showNumbers: Whether or not to number the options.
-    
-    void drawWindow(std::string title, std::string instructions, std::vector<std::string> options, int type, bool showNumbers) {
+    void drawHeader(std::string title, std::string instructions) {
         clear();
         printf("######################################################\n");
         printf("##  %-47s ##\n", title.c_str());
         printf("######################################################\n");
         printf("#                                                    #\n");
         printf("#   %-48s #\n", instructions.c_str());
+        printf("#                                                    #\n");
+    }
+
+    void drawOptions(std::vector<std::string> options, bool showNumbers) {
         if(options.size() != 0) {
             for(int i = 0; i < static_cast<int>(options.size()); i++) {
                 if(showNumbers == true) {
@@ -40,22 +45,48 @@ namespace ConWin {
             }
         }
         printf("#                                                    #\n");
+    }
+
+    void drawWindowControls(int type) {
         if(type == 1) {
             printf("#   Type \"cancel\" to return to the main menu         #\n");
         }else if(type == 2) {
             printf("#   Press ENTER to continue                          #\n");
         }
         printf("#                                                    #\n");
+    }
+
+    void drawFooter() {
         printf("######################################################\n");
         printf("\n");
     }
 
     //Draws a window that takes no input. 
     void drawDialogWindow(std::string title, std::string instructions, std::vector<std::string> options) {
-        drawWindow(title, instructions, options, 2, false);
+        drawHeader(title, instructions);
+        drawOptions(options, false);
+        drawWindowControls(2);
+        drawFooter();
         std::cin.ignore();
     }
-    
+
+    void drawPartWindow(Part *part, std::string title, std::string instructions) {
+        char *lineOne = (char*)malloc(sizeof(char) * 99);
+        char *lineTwo = (char*)malloc(sizeof(char) * 99);
+        char *lineThree = (char*)malloc(sizeof(char) * 99);
+        char *lineFour = (char*)malloc(sizeof(char) * 99);
+        sprintf(lineOne, "Part Name: %s", part->getName().c_str());
+        sprintf(lineTwo, "Part Cost: %d", part->getPrice());
+        sprintf(lineThree, "Part Type: %d", part->getType());
+        sprintf(lineFour, "Part Stock: %d", part->getStock());
+        std::vector<std::string> lines = {lineOne, lineTwo, lineThree, lineFour};
+        ConWin::drawDialogWindow(title, instructions, lines);
+        free(lineOne);
+        free(lineTwo);
+        free(lineThree);
+        free(lineFour);
+    }
+
     //Draws a window that will ask the user for a numbered input based on an array of options.
     int getOptionWindow(std::string title, std::string instructions, std::vector<std::string> options, bool type) {
         bool waitingForValidInput = true;
@@ -67,7 +98,10 @@ namespace ConWin {
         for(option_range = 0; option_range < options.size(); option_range++);
 
         while(waitingForValidInput) {
-            drawWindow(title, instructions, options, type, true);
+            drawHeader(title, instructions);
+            drawOptions(options, true);
+            drawWindowControls(type);
+            drawFooter();
 
             if(firstTry == false) {
                 printf("Invalid input. Try again.\n");
@@ -99,7 +133,9 @@ namespace ConWin {
         bool firstTry = true;
 
         while(waitingForValidInput) {
-            drawWindow(title, instructions, std::vector<std::string>{}, type, true);
+            drawHeader(title, instructions);
+            drawWindowControls(type);
+            drawFooter();
 
             if(firstTry == false) {
                 printf("Invalid input. Try again.\n");
@@ -123,14 +159,15 @@ namespace ConWin {
     }
 
     //Draws a window that asks a user for a string.
-    char* getStringWindow(std::string title, std::string instruction, int type) {
+    char* getStringWindow(std::string title, std::string instructions, int type) {
         //flushBuffer();
         bool waitingForValidInput = true;
         char *input = (char*)malloc(sizeof(char)*99);
         bool firstTry = true;
         while(waitingForValidInput) {
-
-            drawWindow(title, instruction, std::vector<std::string>{}, type, true);
+            drawHeader(title, instructions);
+            drawWindowControls(type);
+            drawFooter();
 
             if(firstTry == false) {
                 printf("Invalid input: %s. Try again.\n", input);
