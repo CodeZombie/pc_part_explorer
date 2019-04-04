@@ -4,7 +4,7 @@
  * Useful for making basic visual interfaces 
  * within limited console windows.
  * 
- * Created March 2019, Jeremy Clark
+ * Created March 2019, Jeremy Clark & Matt Marini
  * ****************************************/
 
 namespace ConWin {
@@ -13,9 +13,12 @@ namespace ConWin {
     void clear() {
         std::cout << "\x1B[2J\x1B[H";
     }
+    
+    //waits for user input of any kind.
     void wait() {
         std::cin.ignore();
     }
+
     //draws a window to the console.
     //  title: The text displayed at the top of the window
     //  instructions: The text displayed at the top of the window body.
@@ -70,15 +73,15 @@ namespace ConWin {
         std::cin.ignore();
     }
 
-    void drawPartWindow(Part *part, std::string title, std::string instructions) {
+    void drawProductWindow(Product *product, std::string title, std::string instructions) {
         char *lineOne = (char*)malloc(sizeof(char) * 99);
         char *lineTwo = (char*)malloc(sizeof(char) * 99);
         char *lineThree = (char*)malloc(sizeof(char) * 99);
         char *lineFour = (char*)malloc(sizeof(char) * 99);
-        sprintf(lineOne, "Part Name: %s", part->getName().c_str());
-        sprintf(lineTwo, "Part Cost: %d", part->getPrice());
-        sprintf(lineThree, "Part Type: %s", part->getType().c_str());
-        sprintf(lineFour, "Part Stock: %d", part->getStock());
+        sprintf(lineOne, "Product Name: %s", product->getName().c_str());
+        sprintf(lineTwo, "Product Cost: %d", product->getPrice());
+        sprintf(lineThree, "Product Type: %s", product->getType().c_str());
+        sprintf(lineFour, "Product Stock: %d", product->getStock());
         std::vector<std::string> lines = {lineOne, lineTwo, lineThree, lineFour};
         ConWin::drawDialogWindow(title, instructions, lines);
         free(lineOne);
@@ -158,6 +161,18 @@ namespace ConWin {
         return input_int;
     }
 
+    bool validateString(std::string str) {
+        const char* charptr = str.data(); 
+        if(isspace(charptr[0])){ return false;}
+
+        for(int i = 0; i< str.size(); i++) {
+            if(!isalnum(charptr[i]) && !isspace(charptr[i])) {
+                return false; //non alphanumeric and not a space. fail it.
+            }
+        }
+        return true;
+    }
+
     //Draws a window that asks a user for a string.
     std::string getStringWindow(std::string title, std::string instructions, int type) {
         bool waitingForValidInput = true;
@@ -172,7 +187,7 @@ namespace ConWin {
                 printf("Invalid input: %s. Try again.\n", input.c_str());
             }
             std::getline(std::cin, input);
-            if(input != "") {
+            if(input != "" && validateString(input)) {
                 waitingForValidInput = false;
                 if(input == "cancel"){
                     return "";

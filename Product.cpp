@@ -1,6 +1,6 @@
 
-//  The part object.
-class Part{
+//  The product object.
+class Product{
   private:
     std::string name;
     std::string type;
@@ -9,7 +9,7 @@ class Part{
 
   public:
 
-    Part(std::string name, std::string type, int price, int stock) {
+    Product(std::string name, std::string type, int price, int stock) {
       this->name = name;
       this->type = type;
       this->price = price;

@@ -1,18 +1,18 @@
 /*
   Changes
-  1. implemented each of the 5 part modification options; changing the 4 attributes and delete.
+  1. implemented each of the 5 product modification options; changing the 4 attributes and delete.
   2. added a loop for the modifications window so that when one change is made the window is 
-     reopened to allow for more changes to the same part.
-  3. added remove() to PartDatabase.cpp for deleting from the sets
-  4. small change in listPartWindow when calling partOptionPrompt to add page*10 to the index being
+     reopened to allow for more changes to the same product.
+  3. added remove() to ProductDatabase.cpp for deleting from the sets
+  4. small change in listProductWindow when calling productOptionPrompt to add page*10 to the index being
      selected. Previously was opening items from the first page even when selecting from the second.
-  5. again when calling partOptionPrompt, now passes partTree for deletion purposes
+  5. again when calling productOptionPrompt, now passes productTree for deletion purposes
 
   Following changes are unique to this copy of the project file, I have a backup copy without these:
-  1. Changed part type to be a string which the user can input when adding a new part
-  2. removed case 3 from main, no longer allowing the addition of new part types
-  3. Updated various outputs to accomodate the string format of part type
-  4. Changed methods for sorting in PartDatabase.cpp to use a string filter instead of int
+  1. Changed product type to be a string which the user can input when adding a new product
+  2. removed case 3 from main, no longer allowing the addition of new product types
+  3. Updated various outputs to accomodate the string format of product type
+  4. Changed methods for sorting in ProductDatabase.cpp to use a string filter instead of int
   
   I think thats pretty much everything
 */
@@ -26,133 +26,136 @@
 #include <vector>
 #include <string.h>
 #include <set>
-#include "Part.cpp"
+#include "Product.cpp"
 #include "ConWin.cpp"
-#include "PartDatabase.cpp"
+#include "ProductDatabase.cpp"
 
-std::string getPartTypeWindow(PartDatabase * partDB, bool canEnterNewType) {
+std::string getProductTypeWindow(ProductDatabase * productDB, bool canEnterNewType) {
   std::string p_type;
   int p_type_int;
 
   std::vector<std::string> ptypes;
-  bool asking_for_part_type = true;
+  bool asking_for_product_type = true;
 
   //Creates a window that asks for the product type, based on a list of all existing product types.
   //also lets the user define their own product type.
-  while(asking_for_part_type) {
-    ptypes = partDB->getPartTypes();
+  while(asking_for_product_type) {
+    ptypes = productDB->getProductTypes();
     if(canEnterNewType) {
-      ptypes.insert(ptypes.end(), "NEW PART TYPE");
+      ptypes.insert(ptypes.end(), "NEW PRODUCT TYPE");
     }
 
-    p_type_int = ConWin::getOptionWindow("ADD NEW PART", "Choose part type", ptypes, 1);
+    p_type_int = ConWin::getOptionWindow("ADD NEW PRODUCT", "Choose product type", ptypes, 1);
     if(p_type_int == -69) {
       return ""; 
-    }else if(canEnterNewType && p_type_int == ptypes.size()) { //if we selected NEW PART TYPE
-      //ask the user to create a new part;
-      bool asking_for_new_part_type = true;
-      while(asking_for_new_part_type){
-        p_type = ConWin::getStringWindow("CREATE NEW PART TYPE", "Enter new part type", 1);
+    }else if(canEnterNewType && p_type_int == ptypes.size()) { //if we selected NEW PRODUCT TYPE
+      //ask the user to create a new product;
+      bool asking_for_new_product_type = true;
+      while(asking_for_new_product_type){
+        p_type = ConWin::getStringWindow("CREATE NEW PRODUCT TYPE", "Enter new product type", 1);
         if(p_type.empty()){
-          asking_for_new_part_type = false;
+          asking_for_new_product_type = false;
         }else {
-          //succesfully entered new part type.
-          partDB->insertPartType(p_type);
-          asking_for_new_part_type = false;
-          asking_for_part_type = false;
+          //succesfully entered new product type.
+          productDB->insertProductType(p_type);
+          asking_for_new_product_type = false;
+          asking_for_product_type = false;
         }
       }
     }else {
-      asking_for_part_type = false;
+      asking_for_product_type = false;
       p_type = ptypes[p_type_int-1];
     }
   }
   return p_type;
 }
 
-Part* addPartWindow(PartDatabase * partDB) {
+Product* addProductWindow(ProductDatabase * productDB) {
   std::string p_name;
   std::string p_type;
   int p_cost;
   int p_stock;
 
-  //Create a window that asks the user for the part name
-  p_name = ConWin::getStringWindow("ADD NEW PART", "Enter part name", 1);
+  //Create a window that asks the user for the product name
+  p_name = ConWin::getStringWindow("ADD NEW PRODUCT", "Enter product name", 1);
   if(p_name.empty()) {
     return NULL;
   }
 
-  //Creates a window that asks you how much the part costs.
-  p_cost = ConWin::getIntegerWindow("ADD NEW PART", "Enter Part Cost", 1);
+  //Creates a window that asks you how much the product costs.
+  p_cost = ConWin::getIntegerWindow("ADD NEW PRODUCT", "Enter Product Cost", 1);
   if(p_cost == -69) { //magic "cancel" character
     return NULL;
   }
 
-  //Creates a window that asks you how many of the part are currently in stock.
-  p_stock = ConWin::getIntegerWindow("ADD NEW PART", "Enter Current Stock", 1);
+  //Creates a window that asks you how many of the product are currently in stock.
+  p_stock = ConWin::getIntegerWindow("ADD NEW PRODUCT", "Enter Current Stock", 1);
   if(p_stock == -69) { //magic "cancel" character
     return NULL;
   }
 
 
-  p_type = getPartTypeWindow(partDB, true);
+  p_type = getProductTypeWindow(productDB, true);
   if(p_type.empty()) { return NULL;}
 
-  Part* new_part = new Part(p_name, p_type, p_cost, p_stock);
-  ConWin::drawPartWindow(new_part, "PART SUCCESFULLY CREATED", "Please confirm the part information...");
-  return new_part;
+  Product* new_product = new Product(p_name, p_type, p_cost, p_stock);
+  ConWin::drawProductWindow(new_product, "PRODUCT SUCCESFULLY ADDED", "Please confirm the product information...");
+  return new_product;
 }
 
-void partOptionPrompt(Part *part, PartDatabase * partTree) {
-  ConWin::drawPartWindow(part, "PART INFO", "Select an option in the next page");
+void productOptionPrompt(Product *product, ProductDatabase * productTree) {
+  if(product == NULL) {
+    return;
+  }
+  ConWin::drawProductWindow(product, "PRODUCT INFO", "Select an option in the next page");
   int result;
   std::string p_name;
 
   while (result != 6) {
-    result = ConWin::getOptionWindow("SELECT PART OPTION", "Choose what to do with this part", {"Change name", "Change price", "Change stock", "Change product type", "Delete", "Back"}, 0);
+    result = ConWin::getOptionWindow("SELECT PRODUCT OPTION", "Choose what to do with this product", {"Change name", "Change price", "Change stock", "Change product type", "Delete", "Back"}, 0);
     if(result == 1) {
 
-      //Changes the Part name
-      p_name = ConWin::getStringWindow("MODIFY PART", "Enter New Part Name", 1);
+      //Changes the Product name
+      p_name = ConWin::getStringWindow("MODIFY PRODUCT", "Enter new product name", 1);
       if (p_name.empty()) {return;}
-      part->setName(p_name);
+      product->setName(p_name);
 
     }else if(result == 2) {
       
-      //Changes the Part price
-      int p_cost = ConWin::getIntegerWindow("MODIFY PART", "Enter New Part Cost", 1);
+      //Changes the Product price
+      int p_cost = ConWin::getIntegerWindow("MODIFY PRODUCT", "Enter new product price", 1);
       if (p_cost == -69) {return;}
-      part->setPrice(p_cost);
-      partTree->update(part);
+      product->setPrice(p_cost);
+      productTree->update(product);
 
     }else if(result == 3) {
       
-      //Changes the Part stock
-      int p_stock = ConWin::getIntegerWindow("MODIFY PART", "Enter New Stock", 1);
+      //Changes the Product stock
+      int p_stock = ConWin::getIntegerWindow("MODIFY PRODUCT", "Enter new stock", 1);
       if (p_stock == -69) {return;}
-      part->setStock(p_stock);
-      partTree->update(part);
+      product->setStock(p_stock);
+      productTree->update(product);
 
     }else if(result == 4) {
       
-      //Changes the Part type
+      //Changes the Product type
       std::string p_type;
-      p_type = getPartTypeWindow(partTree, true);
+      p_type = getProductTypeWindow(productTree, true);
       if (p_type.empty()) {return;}
-      part->setType(p_type);
+      product->setType(p_type);
 
     }else if(result == 5) {
       
-      //Deletes the Part
-      partTree->remove(part);
-      ConWin::drawDialogWindow("MODIFY PART", "This Part Has Been DELETED", {});
+      //Deletes the Product
+      productTree->remove(product);
+      ConWin::drawDialogWindow("MODIFY PRODUCT", "This product has been DELETED", {});
       result++;
     }
   }
 }
 
-void listPartWindow(PartDatabase * partTree) {
-  std::vector<Part *> localPartVector = partTree->getByPriceAscending();
+void listProductWindow(ProductDatabase * productTree) {
+  std::vector<Product *> localProductVector = productTree->getByPriceAscending();
   bool finished = false;
   int page = 0;
   std::string filter = "";
@@ -162,40 +165,42 @@ void listPartWindow(PartDatabase * partTree) {
 
     /* SORT VECTOR */
     if(sortBy == 1) {
-      localPartVector = partTree->getByPriceAscending(filter);
+      localProductVector = productTree->getByPriceAscending(filter);
     }else if(sortBy == 2){
-      localPartVector = partTree->getByPriceDescending(filter);
+      localProductVector = productTree->getByPriceDescending(filter);
     }else if(sortBy == 3) {
-      localPartVector = partTree->getByStockAscending(filter);
+      localProductVector = productTree->getByStockAscending(filter);
     }else if(sortBy == 4) {
-      localPartVector = partTree->getByStockDescending(filter);
+      localProductVector = productTree->getByStockDescending(filter);
     }
 
     std::vector<std::string> options;
-    std::vector<Part *>::iterator localPartVectorIterator = localPartVector.begin();
-    std::advance(localPartVectorIterator, page*10);
+    std::vector<Product *>::iterator localProductVectorIterator = localProductVector.begin();
+    std::advance(localProductVectorIterator, page*10);
     //localMapIterator++; //set page. (++ page*10) //maybe use vector::advance
 
     bool foundEnd = false;
     for(int i = 0; i < 10; i++) {
-      if(foundEnd || localPartVectorIterator == localPartVector.end()) {
+      if(foundEnd || localProductVectorIterator == localProductVector.end()) {
         options.insert(options.end(), "");
         foundEnd =true;
       }else{
-        options.insert(options.end(), (*localPartVectorIterator)->getName() + " | " + (*localPartVectorIterator)->getType() + " $" + std::to_string((*localPartVectorIterator)->getPrice()) + " x" + std::to_string((*localPartVectorIterator)->getStock()));
+        options.insert(options.end(), (*localProductVectorIterator)->getName() + " | " + (*localProductVectorIterator)->getType() + " $" + std::to_string((*localProductVectorIterator)->getPrice()) + " x" + std::to_string((*localProductVectorIterator)->getStock()));
       }
-      localPartVectorIterator++;
+      localProductVectorIterator++;
     }
-    options.insert(options.end(), "Filter Results");
-    options.insert(options.end(), "Next Page");
+    options.insert(options.end(), "Filter results");
+    options.insert(options.end(), "Next page");
     options.insert(options.end(), "Previous page");
       
-    std::string pageInstr= "Select an option (pg " + std::to_string(page+1) + " of " + std::to_string((int)(localPartVector.size() / 10)+1) + ")";
-    int result = ConWin::getOptionWindow("Select a part", pageInstr, options, 1);
+    std::string pageInstr= "Select an option (pg " + std::to_string(page+1) + " of " + std::to_string((int)(localProductVector.size() / 10)+1) + ")";
+    int result = ConWin::getOptionWindow("Select a product", pageInstr, options, 1);
     if(result >= 1 && result <= 10) {
-      if(localPartVector[page*10 + result-1] != NULL) {
-        partOptionPrompt(localPartVector[page*10 + result-1], partTree); //potentially make changes
-        partTree->saveToFile("database.db");//save all changes
+      if(page*10 + result-1 < localProductVector.size()) {
+        if(localProductVector[page*10 + result-1] != NULL) {
+          productOptionPrompt(localProductVector[page*10 + result-1], productTree); //potentially make changes
+          productTree->saveToFile("database.db");//save all changes
+        }
       }
     }else if(result == 11) {
       //show the filter window to filter the results.
@@ -203,7 +208,7 @@ void listPartWindow(PartDatabase * partTree) {
       if(result >= 1 && result <= 4) {
         sortBy = result;
       }else if(result == 5) {
-        std::string t_fil = getPartTypeWindow(partTree, false);//ConWin::getStringWindow("FILTER BY TYPE", "Input the type to filter by", 1);
+        std::string t_fil = getProductTypeWindow(productTree, false);//ConWin::getStringWindow("FILTER BY TYPE", "Input the type to filter by", 1);
         if(!t_fil.empty()) {
           filter = t_fil;
         }
@@ -213,7 +218,7 @@ void listPartWindow(PartDatabase * partTree) {
     }else if(result == 12) {
       //start showing the next ten items
 
-      if(page < ceil(localPartVector.size() / 10)) {
+      if(page < ceil(localProductVector.size() / 10)) {
         page++;
       }
     }else if(result == 13) {
@@ -229,23 +234,23 @@ void listPartWindow(PartDatabase * partTree) {
 
 int main() {
   bool running = true;
-  std::vector<std::string> initial_options = {"Add a part", "Find parts", "Exit"};
+  std::vector<std::string> initial_options = {"Add a product", "Find products", "Exit"};
 
-  PartDatabase * partTree = new PartDatabase();
-  partTree->loadFromFile("database.db");
- // printf("NUMER OF ELEMENTS: %d", partTree->size());
+  ProductDatabase * productTree = new ProductDatabase();
+  productTree->loadFromFile("database.db");
+ // printf("NUMER OF ELEMENTS: %d", productTree->size());
 
   while(running) {
-    switch(ConWin::getOptionWindow("PC PART EXPLORER", "Please select an option", initial_options, 0)) {
+    switch(ConWin::getOptionWindow("BUSINESS PRODUCT CATALOG v4.2.0", "Please make a selection~", initial_options, 0)) {
       case 1: 
       {
-        partTree->insert(addPartWindow(partTree));
-        partTree->saveToFile("database.db");
+        productTree->insert(addProductWindow(productTree));
+        productTree->saveToFile("database.db");
         break;
       }
       case 2: 
       {
-        listPartWindow(partTree);
+        listProductWindow(productTree);
         break;
       }
       case 3: 
@@ -255,6 +260,6 @@ int main() {
       }
     }
   }
-  printf("Thanks for using PC Part Explorer!\n");
+  printf("Thanks for using Business Product Catalog!\n");
   return 0;
 }
