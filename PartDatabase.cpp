@@ -21,6 +21,7 @@ class PartDatabase {
     private:
         std::multiset<Part *, price_compare> elementsByPrice;
         std::multiset<Part *, stock_compare> elementsByStock;
+        std::vector<std::string> partTypes;
 
     public:
         void loadFromFile(std::string filename) {
@@ -40,11 +41,15 @@ class PartDatabase {
                     part_name = line;
                 }else if(iterator % 4 == 1) {
                     part_type = line;
+                    if(!this->partTypeExists(part_type)) {
+                        this->partTypes.insert(this->partTypes.end(), part_type);
+                    }
+
                 }else if(iterator % 4 == 2) {
                     part_price = line;
                 }else if(iterator % 4 == 3) {
                     part_stock = line;
-                    this->insert(new Part(part_name, std::stoi(part_type), std::stoi(part_price), std::stoi(part_stock)));
+                    this->insert(new Part(part_name, part_type, std::stoi(part_price), std::stoi(part_stock)));
                 }
                 iterator++;
                 }
@@ -57,12 +62,29 @@ class PartDatabase {
             dbFile.open(filename);
             for (std::multiset<Part *, price_compare>::iterator iter = elementsByPrice.begin(); iter != elementsByPrice.end(); ++iter){
                 dbFile << (*iter)->getName() << "\n";
-                dbFile << std::to_string((*iter)->getType()) << "\n";
+                dbFile << (*iter)->getType() << "\n";
                 dbFile << std::to_string((*iter)->getPrice()) << "\n";
                 dbFile << std::to_string((*iter)->getStock()) << "\n";
             }
             dbFile.close();
 
+        }
+
+        void insertPartType(std::string newType) {
+            if(! this->partTypeExists(newType)) {
+                this->partTypes.insert(this->partTypes.end(), newType);
+            }
+        }
+
+        std::vector<std::string> getPartTypes() {
+            return this->partTypes;
+        }
+
+        bool partTypeExists(std::string type) {
+            if (std::find(this->partTypes.begin(), this->partTypes.end(), type ) != this->partTypes.end()) {
+                return true;
+            }
+            return false;
         }
         
         //get the number of elements in the tree.
@@ -78,16 +100,28 @@ class PartDatabase {
             }
         }
 
+        //removes an element from the tree
+        void remove(Part * part) {
+                elementsByPrice.erase(part);
+                elementsByStock.erase(part);
+        }
+
+        //call this to re-sort the part that has changed by re-inserting it into the database.
+        void update(Part *part) {  
+            this->remove(part);
+            this->insert(part);
+        }
+
         std::vector<Part *> getByPriceAscending() {
             std::vector<Part *> output;
             output.assign(elementsByPrice.begin(), elementsByPrice.end());
             return output;
         }
 
-        std::vector<Part *> filterByType(std::vector<Part *> parts, int typeFilter) {
+        std::vector<Part *> filterByType(std::vector<Part *> parts, std::string typeFilter) {
             std::vector<Part *> output;
             for(std::vector<Part *>::iterator iter = parts.begin(); iter != parts.end(); ++iter) {
-                if(typeFilter == 0 || (*iter)->getType() == typeFilter) {
+                if(typeFilter == "" || (*iter)->getType() == typeFilter) {
                     output.insert(output.end(), (*iter));
                 }    
             }
@@ -95,25 +129,25 @@ class PartDatabase {
         }
 
         //returns a vector with the sorted set of data.
-        std::vector<Part *> getByPriceAscending(int typeFilter) {
+        std::vector<Part *> getByPriceAscending(std::string typeFilter) {
             std::vector<Part *> output;
             output.assign(elementsByPrice.begin(), elementsByPrice.end());
             return filterByType(output, typeFilter);
         }
 
-        std::vector<Part *> getByPriceDescending(int typeFilter) {
+        std::vector<Part *> getByPriceDescending(std::string typeFilter) {
             std::vector<Part *> output;
             output.assign(elementsByPrice.rbegin(), elementsByPrice.rend());
             return filterByType(output, typeFilter);
         }
 
-        std::vector<Part *> getByStockAscending(int typeFilter) {
+        std::vector<Part *> getByStockAscending(std::string typeFilter) {
             std::vector<Part *> output;
             output.assign(elementsByStock.begin(), elementsByStock.end()); //now convert the sorted data to a vector and return that (for portability)
             return filterByType(output, typeFilter);
         }
 
-        std::vector<Part *> getByStockDescending(int typeFilter) {
+        std::vector<Part *> getByStockDescending(std::string typeFilter) {
             std::vector<Part *> output;
             output.assign(elementsByStock.rbegin(), elementsByStock.rend());
             return filterByType(output, typeFilter);

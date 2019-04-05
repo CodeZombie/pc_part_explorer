@@ -51,7 +51,7 @@ namespace ConWin {
         if(type == 1) {
             printf("#   Type \"cancel\" to return to the main menu                   #\n");
         }else if(type == 2) {
-            printf("#   Press ENTER to continue                                              #\n");
+            printf("#   Press ENTER to continue                                    #\n");
         }
         printf("#                                                              #\n");
     }
@@ -77,7 +77,7 @@ namespace ConWin {
         char *lineFour = (char*)malloc(sizeof(char) * 99);
         sprintf(lineOne, "Part Name: %s", part->getName().c_str());
         sprintf(lineTwo, "Part Cost: %d", part->getPrice());
-        sprintf(lineThree, "Part Type: %d", part->getType());
+        sprintf(lineThree, "Part Type: %s", part->getType().c_str());
         sprintf(lineFour, "Part Stock: %d", part->getStock());
         std::vector<std::string> lines = {lineOne, lineTwo, lineThree, lineFour};
         ConWin::drawDialogWindow(title, instructions, lines);
@@ -159,9 +159,9 @@ namespace ConWin {
     }
 
     //Draws a window that asks a user for a string.
-    char* getStringWindow(std::string title, std::string instructions, int type) {
+    std::string getStringWindow(std::string title, std::string instructions, int type) {
         bool waitingForValidInput = true;
-        char *input = (char*)malloc(sizeof(char)*99);
+        std::string input;
         bool firstTry = true;
         while(waitingForValidInput) {
             drawHeader(title, instructions);
@@ -169,13 +169,13 @@ namespace ConWin {
             drawFooter();
 
             if(firstTry == false) {
-                printf("Invalid input: %s. Try again.\n", input);
+                printf("Invalid input: %s. Try again.\n", input.c_str());
             }
-            std::cin.getline(input, 100);
-            if(strcmp(input, "") != 0) {
+            std::getline(std::cin, input);
+            if(input != "") {
                 waitingForValidInput = false;
-                if(strcmp(input, "cancel") == 0){
-                    return NULL;
+                if(input == "cancel"){
+                    return "";
                 }
             }
             firstTry = false;

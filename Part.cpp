@@ -3,13 +3,13 @@
 class Part{
   private:
     std::string name;
-    int type;
+    std::string type;
     int price;
     int stock;
 
   public:
 
-    Part(std::string name, int type, int price, int stock) {
+    Part(std::string name, std::string type, int price, int stock) {
       this->name = name;
       this->type = type;
       this->price = price;
@@ -32,11 +32,19 @@ class Part{
       return stock;
     }
 
+    void setName(std::string name) {
+      this->name = name;
+    }
+
     std::string getName() {
       return name;
     }
 
-    int getType() {
+    void setType(std::string type) {
+      this->type = type;
+    }
+
+    std::string getType() {
       return type;
     }
 };
